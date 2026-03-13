@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ECOBUS Transport System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f4f8;
+}
+
+header{
+background:#0a4fb4;
+color:white;
+padding:15px;
+font-size:20px;
+display:flex;
+justify-content:space-between;
+}
+
+.login{
+width:320px;
+margin:100px auto;
+background:white;
+padding:30px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin:6px 0;
+}
+
+button{
+padding:10px;
+background:#0a4fb4;
+border:none;
+color:white;
+cursor:pointer;
+width:100%;
+}
+
+.layout{
+display:flex;
+height:100vh;
+}
+
+.sidebar{
+width:230px;
+background:#1e2a38;
+color:white;
+padding:15px;
+}
+
+.sidebar button{
+margin:5px 0;
+}
+
+.content{
+flex:1;
+padding:20px;
+overflow:auto;
+}
+
+.card{
+background:white;
+padding:15px;
+margin-bottom:15px;
+border-radius:6px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid #ddd;
+}
+
+.bus{
+display:grid;
+grid-template-columns:repeat(4,60px);
+gap:10px;
+margin-top:20px;
+}
+
+.seat{
+width:55px;
+height:55px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:6px;
+color:white;
+cursor:pointer;
+}
+
+.free{background:#2ecc71;}
+.booked{background:#e74c3c;}
+
+.analytics{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+}
+
+.box{
+background:#0a4fb4;
+color:white;
+padding:20px;
+border-radius:5px;
+}
+
+.mobile{
+max-width:420px;
+margin:auto;
+border:1px solid #ccc;
+border-radius:20px;
+overflow:hidden;
+}
+
+.mobile-header{
+background:#0a4fb4;
+color:white;
+padding:10px;
+text-align:center;
+}
+
+.mobile-body{
+padding:15px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<span>ECOBUS Smart Transport</span>
+<span id="userInfo"></span>
+</header>
+
+<div id="login" class="login">
+
+<h3>Login</h3>
+
+<input id="user" placeholder="Username">
+<input id="pass" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p style="font-size:12px">
+Admin: admin / admin123<br>
+Staff: staff / staff123<br>
+Customer: customer / customer123
+</p>
+
+</div>
+
+<div id="app" style="display:none">
+
+<div class="layout">
+
+<div class="sidebar">
+
+<button onclick="page('dashboard')">Dashboard</button>
+<button onclick="page('fleet')">Fleet</button>
+<button onclick="page('routes')">Routes</button>
+<button onclick="page('trips')">Trips</button>
+<button onclick="page('tickets')">Tickets</button>
+<button onclick="page('booking')">Booking</button>
+
+</div>
+
+<div class="content">
+
+<div id="dashboard">
+
+<div class="analytics">
+
+<div class="box">Routes<h2 id="routesCount"></h2></div>
+<div class="box">Trips<h2 id="tripsCount"></h2></div>
+<div class="box">Tickets<h2 id="ticketsCount"></h2></div>
+<div class="box">Revenue<h2>$<span id="revenue"></span></h2></div>
+
+</div>
+
+</div>
+
+<div id="fleet" style="display:none">
+
+<div class="card">
+
+<h3>Add Bus</h3>
+
+<input id="busNumber" placeholder="Bus Number">
+<input id="driver" placeholder="Driver Name">
+
+<button onclick="addBus()">Add Bus</button>
+
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Bus</th>
+<th>Driver</th>
+</tr>
+</thead>
+<tbody id="busList"></tbody>
+</table>
+
+</div>
+
+<div id="routes" style="display:none">
+
+<div class="card">
+
+<h3>Create Route</h3>
+
+<input id="from" placeholder="From">
+<input id="to" placeholder="To">
+<input id="price" placeholder="Ticket Price">
+
+<button onclick="addRoute()">Create</button>
+
+</div>
+
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Price</th>
+</tr>
+</thead>
+<tbody id="routeList"></tbody>
+</table>
+
+</div>
+
+<div id="trips" style="display:none">
+
+<div class="card">
+
+<h3>Create Trip</h3>
+
+<select id="routeSelect"></select>
+<select id="busSelect"></select>
+<input id="time" placeholder="Departure Time">
+
+<button onclick="addTrip()">Create Trip</button>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Route</th>
+<th>Bus</th>
+<th>Time</th>
+</tr>
+
+</thead>
+
+<tbody id="tripList"></tbody>
+
+</table>
+
+</div>
+
+<div id="tickets" style="display:none">
+
+<div class="card">
+
+<h3>Tickets</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Passenger</th>
+<th>Route</th>
+<th>Seat</th>
+<th>QR</th>
+</tr>
+
+</thead>
+
+<tbody id="ticketList"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div id="booking" style="display:none">
+
+<div class="mobile">
+
+<div class="mobile-header">Customer Booking</div>
+
+<div class="mobile-body">
+
+<select id="tripBooking"></select>
+
+<input id="passenger" placeholder="Passenger Name">
+
+<div id="seats" class="bus"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const users = [
+{username:"admin",password:"admin123",role:"admin",name:"System Administrator"},
+{username:"staff",password:"staff123",role:"staff",name:"Ticket Officer"},
+{username:"customer",password:"customer123",role:"customer",name:"Passenger"}
+]
+
+function db(k){return JSON.parse(localStorage.getItem(k)||"[]")}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+function login(){
+
+const username=user.value
+const password=pass.value
+
+const found=users.find(u=>u.username===username && u.password===password)
+
+if(!found){
+alert("Invalid login")
+return
+}
+
+localStorage.setItem("currentUser",JSON.stringify(found))
+
+login.style.display="none"
+app.style.display="block"
+
+userInfo.innerText=found.name+" ("+found.role+")"
+
+initRole(found.role)
+
+}
+
+function initRole(role){
+
+const buttons=document.querySelectorAll(".sidebar button")
+
+buttons.forEach(btn=>btn.style.display="block")
+
+if(role==="customer"){
+
+buttons.forEach(btn=>{
+if(!btn.innerText.includes("Booking")){
+btn.style.display="none"
+}
+})
+
+page("booking")
+
+}
+
+if(role==="staff"){
+
+buttons.forEach(btn=>{
+if(btn.innerText.includes("Fleet")){
+btn.style.display="none"
+}
+})
+
+page("tickets")
+
+}
+
+if(role==="admin"){
+page("dashboard")
+}
+
+}
+
+function page(id){
+
+document.querySelectorAll(".content > div").forEach(p=>p.style.display="none")
+
+document.getElementById(id).style.display="block"
+
+render()
+
+}
+
+function addBus(){
+
+let buses=db("buses")
+
+buses.push({number:busNumber.value,driver:driver.value})
+
+save("buses",buses)
+
+render()
+
+}
+
+function addRoute(){
+
+let routes=db("routes")
+
+routes.push({from:from.value,to:to.value,price:price.value})
+
+save("routes",routes)
+
+render()
+
+}
+
+function addTrip(){
+
+let trips=db("trips")
+
+trips.push({
+route:routeSelect.value,
+bus:busSelect.value,
+time:time.value
+})
+
+save("trips",trips)
+
+render()
+
+}
+
+function render(){
+
+let buses=db("buses")
+let routes=db("routes")
+let trips=db("trips")
+let tickets=db("tickets")
+
+routesCount.innerText=routes.length
+tripsCount.innerText=trips.length
+ticketsCount.innerText=tickets.length
+
+let rev=0
+
+tickets.forEach(t=>{
+rev+=Number(routes[t.route].price)
+})
+
+revenue.innerText=rev
+
+busList.innerHTML=""
+
+buses.forEach(b=>{
+busList.innerHTML+=`<tr><td>${b.number}</td><td>${b.driver}</td></tr>`
+})
+
+routeList.innerHTML=""
+routeSelect.innerHTML=""
+
+routes.forEach((r,i)=>{
+
+routeList.innerHTML+=`<tr><td>${r.from}</td><td>${r.to}</td><td>$${r.price}</td></tr>`
+
+routeSelect.innerHTML+=`<option value="${i}">${r.from} → ${r.to}</option>`
+
+})
+
+busSelect.innerHTML=""
+
+buses.forEach((b,i)=>{
+busSelect.innerHTML+=`<option value="${i}">${b.number}</option>`
+})
+
+tripList.innerHTML=""
+tripBooking.innerHTML=""
+
+trips.forEach((t,i)=>{
+
+let r=routes[t.route]
+let b=buses[t.bus]
+
+tripList.innerHTML+=`<tr><td>${r.from}→${r.to}</td><td>${b.number}</td><td>${t.time}</td></tr>`
+
+tripBooking.innerHTML+=`<option value="${i}">${r.from}→${r.to} ${t.time}</option>`
+
+})
+
+ticketList.innerHTML=""
+
+tickets.forEach(t=>{
+
+let r=routes[t.route]
+
+ticketList.innerHTML+=`
+<tr>
+<td>${t.name}</td>
+<td>${r.from}→${r.to}</td>
+<td>${t.seat}</td>
+<td><canvas id="qr${t.id}"></canvas></td>
+</tr>
+`
+
+setTimeout(()=>{
+QRCode.toCanvas(document.getElementById("qr"+t.id),t.id)
+},100)
+
+})
+
+drawSeats()
+
+}
+
+function drawSeats(){
+
+let trip=tripBooking.value
+let seatsDiv=document.getElementById("seats")
+
+let tickets=db("tickets")
+
+seatsDiv.innerHTML=""
+
+for(let i=1;i<=52;i++){
+
+let booked=tickets.find(t=>t.trip==trip && t.seat==i)
+
+let cls=booked?"booked":"free"
+
+seatsDiv.innerHTML+=`
+<div class="seat ${cls}" onclick="bookSeat(${i})">${i}</div>
+`
+
+}
+
+}
+
+function bookSeat(n){
+
+let name=passenger.value
+let trip=tripBooking.value
+
+if(!name){
+alert("Enter passenger name")
+return
+}
+
+let tickets=db("tickets")
+let trips=db("trips")
+
+tickets.push({
+id:"ECO"+Date.now(),
+name:name,
+trip:trip,
+route:trips[trip].route,
+seat:n
+})
+
+save("tickets",tickets)
+
+render()
+
+}
+
+tripBooking.addEventListener("change",drawSeats)
+
+render()
+
+</script>
+
+</body>
+</html>
