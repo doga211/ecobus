@@ -8,88 +8,78 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f4f8;
-}
+body{font-family:Arial;margin:0;background:#f4f6f9}
 
 header{
 background:#0a4fb4;
 color:white;
 padding:15px;
-font-size:20px;
 display:flex;
-justify-content:space-between;
+justify-content:space-between
 }
 
-.login{
+.login-box{
 width:320px;
 margin:100px auto;
 background:white;
 padding:30px;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
+box-shadow:0 5px 15px rgba(0,0,0,0.2)
 }
 
 input,select{
 width:100%;
 padding:10px;
-margin:6px 0;
+margin:5px 0
 }
 
 button{
 padding:10px;
-background:#0a4fb4;
 border:none;
+background:#0a4fb4;
 color:white;
-cursor:pointer;
-width:100%;
+cursor:pointer
 }
 
-.layout{
-display:flex;
-height:100vh;
-}
+.layout{display:flex;height:100vh}
 
 .sidebar{
 width:230px;
 background:#1e2a38;
-color:white;
-padding:15px;
+padding:15px
 }
 
 .sidebar button{
-margin:5px 0;
+width:100%;
+margin:4px 0
 }
 
 .content{
 flex:1;
 padding:20px;
-overflow:auto;
+overflow:auto
 }
 
 .card{
 background:white;
 padding:15px;
 margin-bottom:15px;
-border-radius:6px;
+border-radius:6px
 }
 
 table{
 width:100%;
-border-collapse:collapse;
+border-collapse:collapse
 }
 
 th,td{
 padding:8px;
-border-bottom:1px solid #ddd;
+border-bottom:1px solid #ddd
 }
 
 .bus{
 display:grid;
 grid-template-columns:repeat(4,60px);
-gap:10px;
-margin-top:20px;
+gap:10px
 }
 
 .seat{
@@ -98,25 +88,25 @@ height:55px;
 display:flex;
 align-items:center;
 justify-content:center;
-border-radius:6px;
 color:white;
-cursor:pointer;
+border-radius:6px;
+cursor:pointer
 }
 
-.free{background:#2ecc71;}
-.booked{background:#e74c3c;}
+.free{background:#2ecc71}
+.booked{background:#e74c3c}
 
 .analytics{
 display:grid;
 grid-template-columns:repeat(4,1fr);
-gap:10px;
+gap:10px
 }
 
 .box{
 background:#0a4fb4;
 color:white;
 padding:20px;
-border-radius:5px;
+border-radius:6px
 }
 
 .mobile{
@@ -124,18 +114,46 @@ max-width:420px;
 margin:auto;
 border:1px solid #ccc;
 border-radius:20px;
-overflow:hidden;
+overflow:hidden
 }
 
 .mobile-header{
 background:#0a4fb4;
 color:white;
 padding:10px;
-text-align:center;
+text-align:center
 }
 
-.mobile-body{
-padding:15px;
+.mobile-body{padding:15px}
+
+.modal{
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:rgba(0,0,0,0.5);
+display:none;
+align-items:center;
+justify-content:center
+}
+
+.modal-content{
+background:white;
+padding:20px;
+width:300px
+}
+
+.progress{
+height:12px;
+background:#ddd;
+border-radius:6px;
+overflow:hidden
+}
+
+.progress-bar{
+height:100%;
+background:#2ecc71
 }
 
 </style>
@@ -148,19 +166,19 @@ padding:15px;
 <span id="userInfo"></span>
 </header>
 
-<div id="login" class="login">
+<div id="loginScreen" class="login-box">
 
 <h3>Login</h3>
 
-<input id="user" placeholder="Username">
-<input id="pass" placeholder="Password">
+<input id="username" placeholder="Username">
+<input id="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
+<button onclick="handleLogin()">Login</button>
 
 <p style="font-size:12px">
-Admin: admin / admin123<br>
-Staff: staff / staff123<br>
-Customer: customer / customer123
+admin / admin123<br>
+staff / staff123<br>
+customer / customer123
 </p>
 
 </div>
@@ -171,12 +189,13 @@ Customer: customer / customer123
 
 <div class="sidebar">
 
-<button onclick="page('dashboard')">Dashboard</button>
-<button onclick="page('fleet')">Fleet</button>
-<button onclick="page('routes')">Routes</button>
-<button onclick="page('trips')">Trips</button>
-<button onclick="page('tickets')">Tickets</button>
-<button onclick="page('booking')">Booking</button>
+<button onclick="showPage('dashboard')">Dashboard</button>
+<button onclick="showPage('fleet')">Fleet</button>
+<button onclick="showPage('routes')">Routes</button>
+<button onclick="showPage('trips')">Trips</button>
+<button onclick="showPage('tickets')">Tickets</button>
+<button onclick="showPage('booking')">Booking</button>
+<button onclick="showPage('cargo')">Cargo</button>
 
 </div>
 
@@ -193,6 +212,18 @@ Customer: customer / customer123
 
 </div>
 
+<div class="card">
+
+<h3>Seat Occupancy</h3>
+
+<div class="progress">
+<div id="seatBar" class="progress-bar"></div>
+</div>
+
+<p id="seatStats"></p>
+
+</div>
+
 </div>
 
 <div id="fleet" style="display:none">
@@ -202,20 +233,23 @@ Customer: customer / customer123
 <h3>Add Bus</h3>
 
 <input id="busNumber" placeholder="Bus Number">
-<input id="driver" placeholder="Driver Name">
+<input id="driver" placeholder="Driver">
 
-<button onclick="addBus()">Add Bus</button>
+<button onclick="addBus()">Add</button>
 
 </div>
 
 <table>
+
 <thead>
 <tr>
 <th>Bus</th>
 <th>Driver</th>
 </tr>
 </thead>
+
 <tbody id="busList"></tbody>
+
 </table>
 
 </div>
@@ -226,15 +260,16 @@ Customer: customer / customer123
 
 <h3>Create Route</h3>
 
-<input id="from" placeholder="From">
-<input id="to" placeholder="To">
-<input id="price" placeholder="Ticket Price">
+<input id="from">
+<input id="to">
+<input id="price">
 
 <button onclick="addRoute()">Create</button>
 
 </div>
 
 <table>
+
 <thead>
 <tr>
 <th>From</th>
@@ -242,7 +277,9 @@ Customer: customer / customer123
 <th>Price</th>
 </tr>
 </thead>
+
 <tbody id="routeList"></tbody>
+
 </table>
 
 </div>
@@ -255,9 +292,9 @@ Customer: customer / customer123
 
 <select id="routeSelect"></select>
 <select id="busSelect"></select>
-<input id="time" placeholder="Departure Time">
+<input id="time">
 
-<button onclick="addTrip()">Create Trip</button>
+<button onclick="addTrip()">Create</button>
 
 </div>
 
@@ -269,7 +306,6 @@ Customer: customer / customer123
 <th>Bus</th>
 <th>Time</th>
 </tr>
-
 </thead>
 
 <tbody id="tripList"></tbody>
@@ -280,10 +316,6 @@ Customer: customer / customer123
 
 <div id="tickets" style="display:none">
 
-<div class="card">
-
-<h3>Tickets</h3>
-
 <table>
 
 <thead>
@@ -291,7 +323,7 @@ Customer: customer / customer123
 <th>Passenger</th>
 <th>Route</th>
 <th>Seat</th>
-<th>QR</th>
+<th>Ticket</th>
 </tr>
 
 </thead>
@@ -299,8 +331,6 @@ Customer: customer / customer123
 <tbody id="ticketList"></tbody>
 
 </table>
-
-</div>
 
 </div>
 
@@ -314,7 +344,7 @@ Customer: customer / customer123
 
 <select id="tripBooking"></select>
 
-<input id="passenger" placeholder="Passenger Name">
+<input id="passenger" placeholder="Passenger">
 
 <div id="seats" class="bus"></div>
 
@@ -324,7 +354,53 @@ Customer: customer / customer123
 
 </div>
 
+<div id="cargo" style="display:none">
+
+<div class="card">
+
+<h3>Cargo Booking</h3>
+
+<input id="cargoName" placeholder="Sender Name">
+<input id="cargoItem" placeholder="Item Description">
+<input id="cargoDestination" placeholder="Destination">
+
+<button onclick="bookCargo()">Book Cargo</button>
+
 </div>
+
+<table>
+
+<thead>
+<tr>
+<th>Sender</th>
+<th>Item</th>
+<th>Destination</th>
+</tr>
+</thead>
+
+<tbody id="cargoList"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="ticketModal" class="modal">
+
+<div class="modal-content">
+
+<h3>Ticket</h3>
+
+<canvas id="ticketQR"></canvas>
+
+<button onclick="printTicket()">Print</button>
+
+<button onclick="closeModal()">Close</button>
 
 </div>
 
@@ -332,31 +408,29 @@ Customer: customer / customer123
 
 <script>
 
-const users = [
-{username:"admin",password:"admin123",role:"admin",name:"System Administrator"},
-{username:"staff",password:"staff123",role:"staff",name:"Ticket Officer"},
+const users=[
+{username:"admin",password:"admin123",role:"admin",name:"System Admin"},
+{username:"staff",password:"staff123",role:"staff",name:"Ticket Staff"},
 {username:"customer",password:"customer123",role:"customer",name:"Passenger"}
 ]
 
 function db(k){return JSON.parse(localStorage.getItem(k)||"[]")}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 
-function login(){
+function handleLogin(){
 
-const username=user.value
-const password=pass.value
+let u=username.value
+let p=password.value
 
-const found=users.find(u=>u.username===username && u.password===password)
+let found=users.find(x=>x.username===u && x.password===p)
 
 if(!found){
 alert("Invalid login")
 return
 }
 
-localStorage.setItem("currentUser",JSON.stringify(found))
-
-login.style.display="none"
-app.style.display="block"
+document.getElementById("loginScreen").style.display="none"
+document.getElementById("app").style.display="block"
 
 userInfo.innerText=found.name+" ("+found.role+")"
 
@@ -366,43 +440,38 @@ initRole(found.role)
 
 function initRole(role){
 
-const buttons=document.querySelectorAll(".sidebar button")
+let buttons=document.querySelectorAll(".sidebar button")
 
-buttons.forEach(btn=>btn.style.display="block")
+buttons.forEach(b=>b.style.display="block")
 
 if(role==="customer"){
 
-buttons.forEach(btn=>{
-if(!btn.innerText.includes("Booking")){
-btn.style.display="none"
-}
+buttons.forEach(b=>{
+if(!b.innerText.includes("Booking"))b.style.display="none"
 })
 
-page("booking")
+showPage("booking")
 
 }
 
 if(role==="staff"){
 
-buttons.forEach(btn=>{
-if(btn.innerText.includes("Fleet")){
-btn.style.display="none"
-}
+buttons.forEach(b=>{
+if(b.innerText.includes("Fleet"))b.style.display="none"
 })
 
-page("tickets")
+showPage("tickets")
 
 }
 
-if(role==="admin"){
-page("dashboard")
-}
+if(role==="admin")showPage("dashboard")
 
 }
 
-function page(id){
+function showPage(id){
 
-document.querySelectorAll(".content > div").forEach(p=>p.style.display="none")
+document.querySelectorAll(".content > div")
+.forEach(p=>p.style.display="none")
 
 document.getElementById(id).style.display="block"
 
@@ -413,11 +482,8 @@ render()
 function addBus(){
 
 let buses=db("buses")
-
 buses.push({number:busNumber.value,driver:driver.value})
-
 save("buses",buses)
-
 render()
 
 }
@@ -425,11 +491,8 @@ render()
 function addRoute(){
 
 let routes=db("routes")
-
 routes.push({from:from.value,to:to.value,price:price.value})
-
 save("routes",routes)
-
 render()
 
 }
@@ -437,15 +500,8 @@ render()
 function addTrip(){
 
 let trips=db("trips")
-
-trips.push({
-route:routeSelect.value,
-bus:busSelect.value,
-time:time.value
-})
-
+trips.push({route:routeSelect.value,bus:busSelect.value,time:time.value})
 save("trips",trips)
-
 render()
 
 }
@@ -456,38 +512,29 @@ let buses=db("buses")
 let routes=db("routes")
 let trips=db("trips")
 let tickets=db("tickets")
+let cargo=db("cargo")
 
 routesCount.innerText=routes.length
 tripsCount.innerText=trips.length
 ticketsCount.innerText=tickets.length
 
 let rev=0
-
-tickets.forEach(t=>{
-rev+=Number(routes[t.route].price)
-})
-
+tickets.forEach(t=>rev+=Number(routes[t.route].price||0))
 revenue.innerText=rev
 
 busList.innerHTML=""
-
 buses.forEach(b=>{
 busList.innerHTML+=`<tr><td>${b.number}</td><td>${b.driver}</td></tr>`
 })
 
 routeList.innerHTML=""
 routeSelect.innerHTML=""
-
 routes.forEach((r,i)=>{
-
 routeList.innerHTML+=`<tr><td>${r.from}</td><td>${r.to}</td><td>$${r.price}</td></tr>`
-
 routeSelect.innerHTML+=`<option value="${i}">${r.from} → ${r.to}</option>`
-
 })
 
 busSelect.innerHTML=""
-
 buses.forEach((b,i)=>{
 busSelect.innerHTML+=`<option value="${i}">${b.number}</option>`
 })
@@ -496,46 +543,43 @@ tripList.innerHTML=""
 tripBooking.innerHTML=""
 
 trips.forEach((t,i)=>{
-
-let r=routes[t.route]
-let b=buses[t.bus]
-
+let r=routes[t.route]||{}
+let b=buses[t.bus]||{}
 tripList.innerHTML+=`<tr><td>${r.from}→${r.to}</td><td>${b.number}</td><td>${t.time}</td></tr>`
-
 tripBooking.innerHTML+=`<option value="${i}">${r.from}→${r.to} ${t.time}</option>`
-
 })
 
 ticketList.innerHTML=""
-
 tickets.forEach(t=>{
-
-let r=routes[t.route]
-
+let r=routes[t.route]||{}
 ticketList.innerHTML+=`
 <tr>
 <td>${t.name}</td>
 <td>${r.from}→${r.to}</td>
 <td>${t.seat}</td>
-<td><canvas id="qr${t.id}"></canvas></td>
-</tr>
-`
-
-setTimeout(()=>{
-QRCode.toCanvas(document.getElementById("qr"+t.id),t.id)
-},100)
-
+<td><button onclick="viewTicket('${t.id}')">View</button></td>
+</tr>`
 })
 
-drawSeats()
+cargoList.innerHTML=""
+cargo.forEach(c=>{
+cargoList.innerHTML+=`
+<tr>
+<td>${c.name}</td>
+<td>${c.item}</td>
+<td>${c.dest}</td>
+</tr>`
+})
+
+updateSeats()
+updateSeatStats()
 
 }
 
-function drawSeats(){
+function updateSeats(){
 
 let trip=tripBooking.value
 let seatsDiv=document.getElementById("seats")
-
 let tickets=db("tickets")
 
 seatsDiv.innerHTML=""
@@ -544,10 +588,9 @@ for(let i=1;i<=52;i++){
 
 let booked=tickets.find(t=>t.trip==trip && t.seat==i)
 
-let cls=booked?"booked":"free"
-
 seatsDiv.innerHTML+=`
-<div class="seat ${cls}" onclick="bookSeat(${i})">${i}</div>
+<div class="seat ${booked?"booked":"free"}"
+onclick="bookSeat(${i})">${i}</div>
 `
 
 }
@@ -559,10 +602,7 @@ function bookSeat(n){
 let name=passenger.value
 let trip=tripBooking.value
 
-if(!name){
-alert("Enter passenger name")
-return
-}
+if(!name)return alert("Enter passenger name")
 
 let tickets=db("tickets")
 let trips=db("trips")
@@ -576,12 +616,54 @@ seat:n
 })
 
 save("tickets",tickets)
+render()
+
+}
+
+function viewTicket(id){
+
+QRCode.toCanvas(ticketQR,id)
+ticketModal.style.display="flex"
+
+}
+
+function printTicket(){
+window.print()
+}
+
+function closeModal(){
+ticketModal.style.display="none"
+}
+
+function bookCargo(){
+
+let cargo=db("cargo")
+
+cargo.push({
+name:cargoName.value,
+item:cargoItem.value,
+dest:cargoDestination.value
+})
+
+save("cargo",cargo)
 
 render()
 
 }
 
-tripBooking.addEventListener("change",drawSeats)
+function updateSeatStats(){
+
+let tickets=db("tickets").length
+let total=52
+
+let percent=(tickets/total)*100
+
+seatBar.style.width=percent+"%"
+seatStats.innerText=tickets+" / "+total+" seats booked"
+
+}
+
+tripBooking.addEventListener("change",updateSeats)
 
 render()
 
