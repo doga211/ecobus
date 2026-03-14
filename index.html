@@ -2,453 +2,167 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ECOBUS Smart System V6</title>
-
+<title>ECOBUS V10 – Investor Demo</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <link rel="manifest" href="data:application/json,{
-'name':'ECOBUS',
+'name':'ECOBUS V10',
 'short_name':'ECOBUS',
 'display':'standalone',
 'start_url':'./',
 'background_color':'#ffffff',
-'theme_color':'#2e7d32'
+'theme_color':'#0A4FB4'
 }">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f4f4f4;
+:root{
+--eco-blue:#0A4FB4;
+--eco-light:#1EA7FF;
+--eco-red:#C0392B;
+--eco-bg:#F4F7FB;
+--seat-free:#2ecc71;
+--seat-booked:#e74c3c;
+--seat-selected:#2196f3;
 }
-
-header{
-background:#2e7d32;
-color:white;
-padding:12px;
-display:flex;
-justify-content:space-between;
-}
-
-.sidebar{
-width:220px;
-background:#1b5e20;
-height:100vh;
-position:fixed;
-padding-top:20px;
-}
-
-.sidebar button{
-display:block;
-width:100%;
-border:none;
-padding:12px;
-background:none;
-color:white;
-text-align:left;
-}
-
-.main{
-margin-left:220px;
-padding:20px;
-}
-
-.card{
-background:white;
-padding:20px;
-margin:10px;
-border-radius:8px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-button{
-background:#ff9800;
-border:none;
-padding:8px 12px;
-border-radius:5px;
-color:white;
-}
-
-.bus{
-display:grid;
-grid-template-columns:repeat(4,40px);
-gap:6px;
-}
-
-.seat{
-width:40px;
-height:40px;
-background:#ccc;
-border-radius:5px;
-text-align:center;
-line-height:40px;
-cursor:pointer;
-}
-
-.seat.booked{
-background:#d32f2f;
-color:white;
-}
-
-.seat.selected{
-background:#2e7d32;
-color:white;
-}
-
-.map{
-height:400px;
-background:#e0e0e0;
-position:relative;
-}
-
-.busDot{
-width:12px;
-height:12px;
-background:red;
-border-radius:50%;
-position:absolute;
-}
-
-@media(max-width:900px){
-
-.sidebar{
-width:100%;
-height:auto;
-position:relative;
-display:flex;
-flex-wrap:wrap;
-}
-
-.main{
-margin-left:0;
-}
-
-}
-
+body{margin:0;font-family:Arial;background:var(--eco-bg);}
+header{background:linear-gradient(90deg,var(--eco-blue),var(--eco-light));color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;font-weight:bold;}
+.sidebar{width:220px;background:#16202a;height:100vh;position:fixed;padding-top:20px;}
+.sidebar button{display:block;width:100%;border:none;padding:12px;background:none;color:white;text-align:left;cursor:pointer;}
+.sidebar button:hover{background:var(--eco-light);}
+.main{margin-left:220px;padding:20px;}
+.card{background:white;padding:20px;margin:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+button{background:var(--eco-blue);border:none;padding:8px 12px;border-radius:5px;color:white;cursor:pointer;}
+.bus{display:grid;grid-template-columns:repeat(4,40px);gap:6px;}
+.seat{width:40px;height:40px;text-align:center;line-height:40px;border-radius:5px;cursor:pointer;background:#ccc;}
+.seat.booked{background:var(--seat-booked);color:white;}
+.seat.selected{background:var(--seat-selected);color:white;}
+.map{height:400px;position:relative;}
+video{width:100%;border:1px solid #ccc;}
+@media(max-width:900px){.sidebar{width:100%;height:auto;position:relative;display:flex;flex-wrap:wrap;}.main{margin-left:0;}}
 </style>
 </head>
-
 <body>
 
 <div id="login" class="card" style="max-width:350px;margin:80px auto">
-
 <h2>ECOBUS Login</h2>
-
 <input id="user" placeholder="username"><br><br>
 <input id="pass" type="password" placeholder="password"><br><br>
-
 <button onclick="login()">Login</button>
-
 <p>
 admin / admin123<br>
 staff / staff123<br>
 customer / customer123<br>
 driver / driver123
 </p>
-
 </div>
 
 <div id="app" style="display:none">
-
 <header>
-<div>🚍 ECOBUS V6</div>
+<div>🚍 ECOBUS V10 Demo</div>
 <div id="userInfo"></div>
+<button onclick="logout()" style="background:#d32f2f;">Logout</button>
 </header>
 
 <div class="sidebar">
-
 <button onclick="page('dashboard')">Dashboard</button>
-<button onclick="page('routes')">Routes</button>
-<button onclick="page('trips')">Trips</button>
-<button onclick="page('booking')">Booking</button>
-<button onclick="page('manifest')">Passenger Manifest</button>
-<button onclick="page('driver')">Driver App</button>
 <button onclick="page('map')">Live Map</button>
-
+<button onclick="page('booking')">Passenger Booking</button>
+<button onclick="page('qr')">QR Boarding</button>
+<button onclick="page('manifest')">Passenger Manifest</button>
+<button onclick="page('driver')">Driver Dashboard</button>
 </div>
 
 <div class="main">
 
 <div id="dashboard" class="card">
-
 <h3>Analytics</h3>
-
 <canvas id="chart"></canvas>
-
-</div>
-
-<div id="routes" class="card" style="display:none">
-
-<h3>Routes</h3>
-
-<ul id="routeList"></ul>
-
-<button onclick="addRoute()">Add Route</button>
-
-</div>
-
-<div id="trips" class="card" style="display:none">
-
-<h3>Trips</h3>
-
-<ul id="tripList"></ul>
-
-<button onclick="addTrip()">Add Trip</button>
-
-</div>
-
-<div id="booking" class="card" style="display:none">
-
-<h3>Seat Booking</h3>
-
-<div class="bus" id="bus"></div>
-
-<br>
-
-Passenger Name:
-<input id="pname">
-
-<button onclick="book()">Book Seat</button>
-
-</div>
-
-<div id="manifest" class="card" style="display:none">
-
-<h3>Passenger Manifest</h3>
-
-<ul id="manifestList"></ul>
-
-</div>
-
-<div id="driver" class="card" style="display:none">
-
-<h3>Driver Mobile Dashboard</h3>
-
-Trip: Juba → Kampala<br><br>
-
-<button onclick="depart()">Start Trip</button>
-<button onclick="arrive()">Arrived</button>
-
 </div>
 
 <div id="map" class="card" style="display:none">
-
 <h3>Live Bus Map</h3>
+<div id="mapArea" style="height:500px;"></div>
+</div>
 
-<div class="map" id="mapArea">
+<div id="booking" class="card" style="display:none">
+<h3>Seat Booking</h3>
+<select id="tripSelect"></select><br><br>
+<div class="bus" id="bus"></div>
+Passenger Name: <input id="pname">
+<button onclick="book()">Book & Download Ticket</button>
+</div>
 
-<div class="busDot" id="bus1"></div>
+<div id="qr" class="card" style="display:none">
+<h3>QR Boarding</h3>
+<input id="scanSeat" placeholder="Enter Seat / Trip"><br><br>
+<button onclick="scanQR()">Check Ticket</button>
+<p id="scanResult"></p>
+</div>
 
+<div id="manifest" class="card" style="display:none">
+<h3>Passenger Manifest</h3>
+<ul id="manifestList"></ul>
+</div>
+
+<div id="driver" class="card" style="display:none">
+<h3>Driver Dashboard (Mobile)</h3>
+<ul id="driverList"></ul>
 </div>
 
 </div>
-
-</div>
 </div>
 
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY"></script>
 <script>
+// ===== GLOBAL =====
+const tripsData=[
+{name:"Juba-Kampala",coords:[{lat:4.85,lng:31.60},{lat:0.3476,lng:32.5825}]},
+{name:"Kampala-Nakuru",coords:[{lat:0.3476,lng:32.5825},{lat:-1.2921,lng:36.8219}]},
+{name:"Nakuru-Juba",coords:[{lat:-1.2921,lng:36.8219},{lat:4.85,lng:31.60}]}
+];
+const seatsData={};tripsData.forEach(t=>seatsData[t.name]=[]);
+let selectedSeat=null,busMarkers=[];
 
-const users=[
-{username:"admin",password:"admin123",role:"admin",name:"Admin"},
-{username:"staff",password:"staff123",role:"staff",name:"Ticket Staff"},
-{username:"customer",password:"customer123",role:"customer",name:"Passenger"},
-{username:"driver",password:"driver123",role:"driver",name:"Driver"}
-]
-
-let seats=JSON.parse(localStorage.getItem("seats")||"[]")
-
+// ===== LOGIN =====
 function login(){
-
-const u=user.value
-const p=pass.value
-
-const found=users.find(x=>x.username==u && x.password==p)
-
-if(!found){alert("Invalid login");return}
-
-login.style.display="none"
-app.style.display="block"
-
-userInfo.innerText=found.name+" ("+found.role+")"
-
-initSeats()
-chart()
-
+const u=user.value,p=pass.value;
+const found=[
+{username:"admin",password:"admin123",role:"admin",name:"Admin"},
+{username:"staff",password:"staff123",role:"staff",name:"Staff"},
+{username:"customer",password:"customer123",role:"passenger",name:"Passenger"},
+{username:"driver",password:"driver123",role:"driver",name:"Driver"}
+].find(x=>x.username==u && x.password==p);
+if(!found){alert("Invalid login");return;}
+login.style.display="none";app.style.display="block";
+userInfo.innerText=found.name+" ("+found.role+")";
+populateTrips();updateChart();loadDriverDashboard();
 }
 
-function page(p){
-
-["dashboard","routes","trips","booking","manifest","driver","map"].forEach(x=>{
-document.getElementById(x).style.display="none"
-})
-
-document.getElementById(p).style.display="block"
-
-if(p=="manifest")loadManifest()
-
-}
-
-function initSeats(){
-
-bus.innerHTML=""
-
-for(let i=1;i<=52;i++){
-
-let s=document.createElement("div")
-
-s.className="seat"
-
-s.innerText=i
-
-if(seats.includes(i))s.classList.add("booked")
-
-s.onclick=()=>selectSeat(i,s)
-
-bus.appendChild(s)
-
-}
-
-}
-
-let selected=null
-
-function selectSeat(i,el){
-
-if(seats.includes(i))return
-
-selected=i
-
-document.querySelectorAll(".seat").forEach(x=>x.classList.remove("selected"))
-
-el.classList.add("selected")
-
-}
-
-function book(){
-
-if(!selected)return alert("Select seat")
-
-seats.push(selected)
-
-localStorage.setItem("seats",JSON.stringify(seats))
-
-createTicket()
-
-initSeats()
-
-}
-
-function createTicket(){
-
-let canvas=document.createElement("canvas")
-
-QRCode.toCanvas(canvas,"ECOBUS-TICKET-"+selected)
-
-let img=canvas.toDataURL()
-
-const {jsPDF}=window.jspdf
-
-let pdf=new jsPDF()
-
-pdf.text("ECOBUS Ticket",20,20)
-
-pdf.text("Seat: "+selected,20,40)
-
-pdf.addImage(img,'PNG',20,60,50,50)
-
-pdf.save("ticket-seat-"+selected+".pdf")
-
-}
-
-function chart(){
-
-new Chart(chart,{
-type:'bar',
-data:{
-labels:["Seats Sold","Seats Left"],
-datasets:[{
-data:[seats.length,52-seats.length]
-}]
-}
-})
-
-}
-
-function loadManifest(){
-
-manifestList.innerHTML=""
-
-seats.forEach(s=>{
-let li=document.createElement("li")
-li.innerText="Passenger Seat "+s
-manifestList.appendChild(li)
-})
-
-}
-
-function addRoute(){
-
-let r=prompt("Route")
-
-let li=document.createElement("li")
-li.innerText=r
-
-routeList.appendChild(li)
-
-}
-
-function addTrip(){
-
-let t=prompt("Trip")
-
-let li=document.createElement("li")
-li.innerText=t
-
-tripList.appendChild(li)
-
-}
-
-function depart(){
-alert("Trip Started")
-}
-
-function arrive(){
-alert("Trip Completed")
-}
-
-let pos=0
-
-setInterval(()=>{
-
-pos+=2
-bus1.style.left=pos+"px"
-bus1.style.top=(pos/2)+"px"
-
-if(pos>350)pos=0
-
-},1000)
-
-if('serviceWorker' in navigator){
-
-navigator.serviceWorker.register(
-URL.createObjectURL(
-new Blob([`
-
-self.addEventListener('install',e=>self.skipWaiting())
-
-self.addEventListener('fetch',e=>{})
-
-`],{type:'text/javascript'})
-))
-
-}
-
+// ===== NAVIGATION =====
+function logout(){app.style.display="none";login.style.display="block";userInfo.innerText="";}
+function page(p){["dashboard","map","booking","qr","manifest","driver"].forEach(x=>document.getElementById(x).style.display="none");document.getElementById(p).style.display="block");if(p=="manifest")loadManifest();if(p=="booking")initSeats();if(p=="map")startMap();if(p=="driver")loadDriverDashboard();}
+
+// ===== TRIPS & SEATS =====
+function populateTrips(){let sel=tripSelect;sel.innerHTML="";tripsData.forEach((t,i)=>sel.innerHTML+=`<option value="${i}">${t.name}</option>`);}
+function initSeats(){let busDiv=bus;busDiv.innerHTML="";let trip=tripsData[tripSelect.value].name;for(let i=1;i<=52;i++){let s=document.createElement("div");s.className="seat";s.innerText=i;if(seatsData[trip].includes(i))s.classList.add("booked");s.onclick=()=>selectSeat(i,s,trip);busDiv.appendChild(s);}}
+function selectSeat(i,el,trip){if(seatsData[trip].includes(i))return;selectedSeat=i;document.querySelectorAll(".seat").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");}
+function book(){let trip=tripsData[tripSelect.value].name;if(!selectedSeat){alert("Select seat");return;}seatsData[trip].push(selectedSeat);createTicket(selectedSeat,trip);initSeats();updateChart();loadDriverDashboard();}
+function createTicket(seat,trip){let canvas=document.createElement("canvas");QRCode.toCanvas(canvas,`ECOBUS-${trip}-Seat${seat}`);let img=canvas.toDataURL();const {jsPDF}=window.jspdf;let pdf=new jsPDF();pdf.text("ECOBUS Ticket",20,20);pdf.text(`Trip: ${trip}`,20,40);pdf.text(`Seat: ${seat}`,20,50);pdf.addImage(img,'PNG',20,60,50,50);pdf.save(`ticket-${trip}-Seat${seat}.pdf`);alert("Ticket downloaded!");}
+function loadManifest(){manifestList.innerHTML="";let trip=tripsData[tripSelect.value].name;seatsData[trip].forEach(s=>{let li=document.createElement("li");li.innerText=`Passenger Seat ${s} (${trip})`;manifestList.appendChild(li);});}
+
+// ===== DRIVER DASHBOARD =====
+function loadDriverDashboard(){driverList.innerHTML="";tripsData.forEach(t=>{let li=document.createElement("li");li.innerText=`${t.name} → Seats booked: ${seatsData[t.name].length}`;driverList.appendChild(li);});}
+
+// ===== QR BOARDING =====
+function scanQR(){let v=scanSeat.value;let found=false;tripsData.forEach(t=>{if(seatsData[t.name].includes(Number(v))){found=true;}});scanResult.innerText=found?"✅ Valid Ticket":"❌ Ticket Not Found";}
+
+// ===== ANALYTICS =====
+function updateChart(){new Chart(chart,{type:'bar',data:{labels:tripsData.map(t=>t.name),datasets:[{label:"Seats Sold",data:tripsData.map(t=>seatsData[t.name].length),backgroundColor:'#0A4FB4'}]}});}
+
+// ===== LIVE MAP =====
+function startMap(){let map=new google.maps.Map(document.getElementById("mapArea"),{zoom:6,center:tripsData[0].coords[0]});busMarkers=[];tripsData.forEach((t,index)=>{let poly=new google.maps.Polyline({path:t.coords,geodesic:true,strokeColor:"#FF0000",strokeOpacity:0.8,strokeWeight:4});poly.setMap(map);let marker=new google.maps.Marker({position:t.coords[0],map:map,title:`Bus ${t.name}`,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:"blue",fillOpacity:1,strokeWeight:1,strokeColor:"white"}});busMarkers.push({marker,path:t.coords,progress:0,speed:0.001*(index+1)});});animateBuses();}
+function animateBuses(){busMarkers.forEach(b=>{(function move(){let path=b.path;let i=Math.floor(b.progress*(path.length-1));let next=Math.min(i+1,path.length-1);let from=path[i],to=path[next];let lat=from.lat+(to.lat-from.lat)*(b.progress-i);let lng=from.lng+(to.lng-from.lng)*(b.progress-i);b.marker.setPosition({lat,lng});b.progress+=b.speed;if(b.progress<path.length-1)setTimeout(move,50);else b.progress=0;setTimeout(move,50)})()});}
 </script>
-
 </body>
 </html>
