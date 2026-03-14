@@ -2,28 +2,41 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ECOBUS Transport System</title>
+<title>ECOBUS Smart Transport V5</title>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f4f6f9}
+:root{
+--eco-blue:#0A4FB4;
+--eco-light:#1EA7FF;
+--eco-red:#C0392B;
+--eco-bg:#F4F7FB;
+}
+
+body{
+font-family:Arial;
+margin:0;
+background:var(--eco-bg)
+}
 
 header{
-background:#0a4fb4;
+background:linear-gradient(90deg,var(--eco-blue),var(--eco-light));
 color:white;
-padding:15px;
+padding:14px 20px;
 display:flex;
-justify-content:space-between
+justify-content:space-between;
+align-items:center;
+font-weight:bold
 }
 
 .login-box{
 width:320px;
-margin:100px auto;
+margin:120px auto;
 background:white;
 padding:30px;
-box-shadow:0 5px 15px rgba(0,0,0,0.2)
+box-shadow:0 8px 20px rgba(0,0,0,0.15)
 }
 
 input,select{
@@ -35,22 +48,29 @@ margin:5px 0
 button{
 padding:10px;
 border:none;
-background:#0a4fb4;
+background:var(--eco-blue);
 color:white;
 cursor:pointer
 }
 
-.layout{display:flex;height:100vh}
+.layout{
+display:flex;
+min-height:100vh
+}
 
 .sidebar{
 width:230px;
-background:#1e2a38;
+background:#16202a;
 padding:15px
 }
 
 .sidebar button{
 width:100%;
 margin:4px 0
+}
+
+.sidebar button:hover{
+background:var(--eco-light)
 }
 
 .content{
@@ -61,9 +81,10 @@ overflow:auto
 
 .card{
 background:white;
-padding:15px;
+padding:20px;
 margin-bottom:15px;
-border-radius:6px
+border-radius:8px;
+box-shadow:0 3px 10px rgba(0,0,0,0.08)
 }
 
 table{
@@ -79,7 +100,8 @@ border-bottom:1px solid #ddd
 .bus{
 display:grid;
 grid-template-columns:repeat(4,60px);
-gap:10px
+gap:10px;
+max-width:300px
 }
 
 .seat{
@@ -98,27 +120,27 @@ cursor:pointer
 
 .analytics{
 display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px
 }
 
 .box{
-background:#0a4fb4;
+background:linear-gradient(135deg,var(--eco-blue),var(--eco-light));
 color:white;
 padding:20px;
-border-radius:6px
+border-radius:8px
 }
 
 .mobile{
 max-width:420px;
 margin:auto;
-border:1px solid #ccc;
 border-radius:20px;
-overflow:hidden
+overflow:hidden;
+border:1px solid #ccc
 }
 
 .mobile-header{
-background:#0a4fb4;
+background:var(--eco-blue);
 color:white;
 padding:10px;
 text-align:center
@@ -132,7 +154,7 @@ top:0;
 left:0;
 right:0;
 bottom:0;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,0.6);
 display:none;
 align-items:center;
 justify-content:center
@@ -141,7 +163,7 @@ justify-content:center
 .modal-content{
 background:white;
 padding:20px;
-width:300px
+width:320px
 }
 
 .progress{
@@ -156,13 +178,31 @@ height:100%;
 background:#2ecc71
 }
 
+@media(max-width:900px){
+
+.layout{
+flex-direction:column
+}
+
+.sidebar{
+width:100%;
+display:flex;
+flex-wrap:wrap
+}
+
+.sidebar button{
+flex:1 1 120px
+}
+
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
-<span>ECOBUS Smart Transport</span>
+<span>ECOBUS • Your Comfort Zone</span>
 <span id="userInfo"></span>
 </header>
 
@@ -171,7 +211,7 @@ background:#2ecc71
 <h3>Login</h3>
 
 <input id="username" placeholder="Username">
-<input id="password" placeholder="Password">
+<input id="password" type="password" placeholder="Password">
 
 <button onclick="handleLogin()">Login</button>
 
@@ -193,6 +233,10 @@ customer / customer123
 <button onclick="showPage('fleet')">Fleet</button>
 <button onclick="showPage('routes')">Routes</button>
 <button onclick="showPage('trips')">Trips</button>
+<button onclick="showPage('calendar')">Calendar</button>
+<button onclick="showPage('map')">Live Map</button>
+<button onclick="showPage('routesMap')">Route Map</button>
+<button onclick="showPage('scanner')">Boarding</button>
 <button onclick="showPage('tickets')">Tickets</button>
 <button onclick="showPage('booking')">Booking</button>
 <button onclick="showPage('cargo')">Cargo</button>
@@ -200,6 +244,8 @@ customer / customer123
 </div>
 
 <div class="content">
+
+<!-- DASHBOARD -->
 
 <div id="dashboard">
 
@@ -225,6 +271,8 @@ customer / customer123
 </div>
 
 </div>
+
+<!-- FLEET -->
 
 <div id="fleet" style="display:none">
 
@@ -254,15 +302,17 @@ customer / customer123
 
 </div>
 
+<!-- ROUTES -->
+
 <div id="routes" style="display:none">
 
 <div class="card">
 
 <h3>Create Route</h3>
 
-<input id="from">
-<input id="to">
-<input id="price">
+<input id="from" placeholder="From">
+<input id="to" placeholder="To">
+<input id="price" placeholder="Price">
 
 <button onclick="addRoute()">Create</button>
 
@@ -284,6 +334,8 @@ customer / customer123
 
 </div>
 
+<!-- TRIPS -->
+
 <div id="trips" style="display:none">
 
 <div class="card">
@@ -292,7 +344,7 @@ customer / customer123
 
 <select id="routeSelect"></select>
 <select id="busSelect"></select>
-<input id="time">
+<input id="time" placeholder="Departure Time">
 
 <button onclick="addTrip()">Create</button>
 
@@ -314,6 +366,73 @@ customer / customer123
 
 </div>
 
+<!-- CALENDAR -->
+
+<div id="calendar" style="display:none">
+
+<div class="card">
+
+<h3>Trip Calendar</h3>
+
+<input type="date" id="calendarDate">
+<button onclick="showTripsForDate()">Show Trips</button>
+
+<ul id="calendarTrips"></ul>
+
+</div>
+
+</div>
+
+<!-- LIVE MAP -->
+
+<div id="map" style="display:none">
+
+<div class="card">
+
+<h3>Live Bus Tracking</h3>
+
+<iframe width="100%" height="450"
+src="https://maps.google.com/maps?q=kampala&t=&z=6&ie=UTF8&iwloc=&output=embed">
+</iframe>
+
+</div>
+
+</div>
+
+<!-- ROUTE MAP -->
+
+<div id="routesMap" style="display:none">
+
+<div class="card">
+
+<h3>EcoBus Routes</h3>
+
+<iframe width="100%" height="450"
+src="https://maps.google.com/maps?q=juba%20kampala%20nakuru&output=embed">
+</iframe>
+
+</div>
+
+</div>
+
+<!-- SCANNER -->
+
+<div id="scanner" style="display:none">
+
+<div class="card">
+
+<h3>Boarding QR Scanner</h3>
+
+<video id="scannerVideo" width="100%" height="300" autoplay></video>
+
+<button onclick="startScanner()">Start Camera</button>
+
+</div>
+
+</div>
+
+<!-- TICKETS -->
+
 <div id="tickets" style="display:none">
 
 <table>
@@ -325,7 +444,6 @@ customer / customer123
 <th>Seat</th>
 <th>Ticket</th>
 </tr>
-
 </thead>
 
 <tbody id="ticketList"></tbody>
@@ -333,6 +451,8 @@ customer / customer123
 </table>
 
 </div>
+
+<!-- BOOKING -->
 
 <div id="booking" style="display:none">
 
@@ -354,6 +474,8 @@ customer / customer123
 
 </div>
 
+<!-- CARGO -->
+
 <div id="cargo" style="display:none">
 
 <div class="card">
@@ -361,7 +483,7 @@ customer / customer123
 <h3>Cargo Booking</h3>
 
 <input id="cargoName" placeholder="Sender Name">
-<input id="cargoItem" placeholder="Item Description">
+<input id="cargoItem" placeholder="Item">
 <input id="cargoDestination" placeholder="Destination">
 
 <button onclick="bookCargo()">Book Cargo</button>
@@ -385,21 +507,20 @@ customer / customer123
 </div>
 
 </div>
-
+</div>
 </div>
 
-</div>
+<!-- TICKET MODAL -->
 
 <div id="ticketModal" class="modal">
 
 <div class="modal-content">
 
-<h3>Ticket</h3>
+<h3>Ticket QR</h3>
 
 <canvas id="ticketQR"></canvas>
 
 <button onclick="printTicket()">Print</button>
-
 <button onclick="closeModal()">Close</button>
 
 </div>
@@ -419,8 +540,8 @@ function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 
 function handleLogin(){
 
-let u=username.value
-let p=password.value
+let u=document.getElementById("username").value
+let p=document.getElementById("password").value
 
 let found=users.find(x=>x.username===u && x.password===p)
 
@@ -429,12 +550,14 @@ alert("Invalid login")
 return
 }
 
-document.getElementById("loginScreen").style.display="none"
-document.getElementById("app").style.display="block"
+loginScreen.style.display="none"
+app.style.display="block"
 
 userInfo.innerText=found.name+" ("+found.role+")"
 
 initRole(found.role)
+
+render()
 
 }
 
@@ -454,7 +577,7 @@ showPage("booking")
 
 }
 
-if(role==="staff"){
+else if(role==="staff"){
 
 buttons.forEach(b=>{
 if(b.innerText.includes("Fleet"))b.style.display="none"
@@ -464,7 +587,7 @@ showPage("tickets")
 
 }
 
-if(role==="admin")showPage("dashboard")
+else showPage("dashboard")
 
 }
 
@@ -474,8 +597,6 @@ document.querySelectorAll(".content > div")
 .forEach(p=>p.style.display="none")
 
 document.getElementById(id).style.display="block"
-
-render()
 
 }
 
@@ -519,7 +640,7 @@ tripsCount.innerText=trips.length
 ticketsCount.innerText=tickets.length
 
 let rev=0
-tickets.forEach(t=>rev+=Number(routes[t.route].price||0))
+tickets.forEach(t=>rev+=Number(routes[t.route]?.price||0))
 revenue.innerText=rev
 
 busList.innerHTML=""
@@ -529,9 +650,12 @@ busList.innerHTML+=`<tr><td>${b.number}</td><td>${b.driver}</td></tr>`
 
 routeList.innerHTML=""
 routeSelect.innerHTML=""
+
 routes.forEach((r,i)=>{
+
 routeList.innerHTML+=`<tr><td>${r.from}</td><td>${r.to}</td><td>$${r.price}</td></tr>`
 routeSelect.innerHTML+=`<option value="${i}">${r.from} → ${r.to}</option>`
+
 })
 
 busSelect.innerHTML=""
@@ -543,25 +667,41 @@ tripList.innerHTML=""
 tripBooking.innerHTML=""
 
 trips.forEach((t,i)=>{
+
 let r=routes[t.route]||{}
 let b=buses[t.bus]||{}
-tripList.innerHTML+=`<tr><td>${r.from}→${r.to}</td><td>${b.number}</td><td>${t.time}</td></tr>`
-tripBooking.innerHTML+=`<option value="${i}">${r.from}→${r.to} ${t.time}</option>`
+
+tripList.innerHTML+=`<tr>
+<td>${r.from}→${r.to}</td>
+<td>${b.number}</td>
+<td>${t.time}</td>
+</tr>`
+
+tripBooking.innerHTML+=`<option value="${i}">
+${r.from}→${r.to} ${t.time}
+</option>`
+
 })
 
 ticketList.innerHTML=""
+
 tickets.forEach(t=>{
+
 let r=routes[t.route]||{}
+
 ticketList.innerHTML+=`
 <tr>
 <td>${t.name}</td>
 <td>${r.from}→${r.to}</td>
 <td>${t.seat}</td>
 <td><button onclick="viewTicket('${t.id}')">View</button></td>
-</tr>`
+</tr>
+`
+
 })
 
 cargoList.innerHTML=""
+
 cargo.forEach(c=>{
 cargoList.innerHTML+=`
 <tr>
@@ -616,6 +756,7 @@ seat:n
 })
 
 save("tickets",tickets)
+
 render()
 
 }
@@ -660,6 +801,37 @@ let percent=(tickets/total)*100
 
 seatBar.style.width=percent+"%"
 seatStats.innerText=tickets+" / "+total+" seats booked"
+
+}
+
+function showTripsForDate(){
+
+let trips=db("trips")
+let routes=db("routes")
+
+calendarTrips.innerHTML=""
+
+trips.forEach(t=>{
+
+let r=routes[t.route]||{}
+
+calendarTrips.innerHTML+=`
+<li>${calendarDate.value} : ${r.from} → ${r.to} (${t.time})</li>
+`
+
+})
+
+}
+
+function startScanner(){
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+scannerVideo.srcObject=stream
+})
+.catch(()=>{
+alert("Camera not available")
+})
 
 }
 
