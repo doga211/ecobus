@@ -2,9 +2,16 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ECOBUS Smart Transport V5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ECOBUS V6 Smart Transport</title>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 
@@ -16,182 +23,153 @@
 }
 
 body{
-font-family:Arial;
 margin:0;
-background:var(--eco-bg)
+font-family:Arial;
+background:var(--eco-bg);
 }
+
+/* HEADER */
 
 header{
 background:linear-gradient(90deg,var(--eco-blue),var(--eco-light));
 color:white;
-padding:14px 20px;
+padding:12px 20px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-font-weight:bold
-}
-
-.login-box{
-width:320px;
-margin:120px auto;
-background:white;
-padding:30px;
-box-shadow:0 8px 20px rgba(0,0,0,0.15)
-}
-
-input,select{
-width:100%;
-padding:10px;
-margin:5px 0
 }
 
 button{
-padding:10px;
+padding:8px 12px;
 border:none;
 background:var(--eco-blue);
 color:white;
-cursor:pointer
+cursor:pointer;
+border-radius:4px;
 }
+
+.logout{
+background:var(--eco-red);
+}
+
+/* LOGIN */
+
+.login{
+max-width:340px;
+margin:120px auto;
+background:white;
+padding:30px;
+border-radius:8px;
+}
+
+/* LAYOUT */
 
 .layout{
 display:flex;
-min-height:100vh
+min-height:100vh;
 }
 
 .sidebar{
-width:230px;
+width:220px;
 background:#16202a;
-padding:15px
+padding:15px;
 }
 
 .sidebar button{
 width:100%;
-margin:4px 0
-}
-
-.sidebar button:hover{
-background:var(--eco-light)
+margin:5px 0;
 }
 
 .content{
 flex:1;
 padding:20px;
-overflow:auto
 }
+
+/* CARDS */
 
 .card{
 background:white;
 padding:20px;
-margin-bottom:15px;
 border-radius:8px;
-box-shadow:0 3px 10px rgba(0,0,0,0.08)
+margin-bottom:15px;
 }
 
-table{
-width:100%;
-border-collapse:collapse
+/* GRID */
+
+.analytics{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:10px;
 }
 
-th,td{
-padding:8px;
-border-bottom:1px solid #ddd
+.box{
+background:var(--eco-blue);
+color:white;
+padding:20px;
+border-radius:8px;
 }
+
+/* BUS SEATS 2+2 */
 
 .bus{
 display:grid;
-grid-template-columns:repeat(4,60px);
-gap:10px;
-max-width:300px
+grid-template-columns:repeat(5,60px);
+gap:8px;
+max-width:340px;
 }
 
 .seat{
-width:55px;
-height:55px;
+height:50px;
 display:flex;
 align-items:center;
 justify-content:center;
-color:white;
 border-radius:6px;
-cursor:pointer
+color:white;
+cursor:pointer;
+}
+
+.aisle{
+background:transparent;
 }
 
 .free{background:#2ecc71}
 .booked{background:#e74c3c}
 
-.analytics{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:12px
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
 }
 
-.box{
-background:linear-gradient(135deg,var(--eco-blue),var(--eco-light));
-color:white;
-padding:20px;
-border-radius:8px
+th,td{
+padding:8px;
+border-bottom:1px solid #ddd;
 }
 
-.mobile{
-max-width:420px;
-margin:auto;
-border-radius:20px;
-overflow:hidden;
-border:1px solid #ccc
+/* MAP */
+
+#map{
+height:400px;
+border-radius:8px;
 }
 
-.mobile-header{
-background:var(--eco-blue);
-color:white;
-padding:10px;
-text-align:center
-}
-
-.mobile-body{padding:15px}
-
-.modal{
-position:fixed;
-top:0;
-left:0;
-right:0;
-bottom:0;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center
-}
-
-.modal-content{
-background:white;
-padding:20px;
-width:320px
-}
-
-.progress{
-height:12px;
-background:#ddd;
-border-radius:6px;
-overflow:hidden
-}
-
-.progress-bar{
-height:100%;
-background:#2ecc71
-}
+/* MOBILE */
 
 @media(max-width:900px){
 
 .layout{
-flex-direction:column
+flex-direction:column;
 }
 
 .sidebar{
 width:100%;
 display:flex;
-flex-wrap:wrap
+flex-wrap:wrap;
 }
 
 .sidebar button{
-flex:1 1 120px
+flex:1 1 120px;
 }
 
 }
@@ -202,23 +180,27 @@ flex:1 1 120px
 <body>
 
 <header>
-<span>ECOBUS • Your Comfort Zone</span>
+<span>🚍 ECOBUS V6</span>
+<div>
 <span id="userInfo"></span>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
 </header>
 
-<div id="loginScreen" class="login-box">
+<div id="loginScreen" class="login">
 
 <h3>Login</h3>
 
 <input id="username" placeholder="Username">
 <input id="password" type="password" placeholder="Password">
 
-<button onclick="handleLogin()">Login</button>
+<button onclick="login()">Login</button>
 
-<p style="font-size:12px">
-admin / admin123<br>
-staff / staff123<br>
-customer / customer123
+<p>
+admin/admin123<br>
+staff/staff123<br>
+driver/driver123<br>
+customer/customer123
 </p>
 
 </div>
@@ -229,17 +211,14 @@ customer / customer123
 
 <div class="sidebar">
 
-<button onclick="showPage('dashboard')">Dashboard</button>
-<button onclick="showPage('fleet')">Fleet</button>
-<button onclick="showPage('routes')">Routes</button>
-<button onclick="showPage('trips')">Trips</button>
-<button onclick="showPage('calendar')">Calendar</button>
-<button onclick="showPage('map')">Live Map</button>
-<button onclick="showPage('routesMap')">Route Map</button>
-<button onclick="showPage('scanner')">Boarding</button>
-<button onclick="showPage('tickets')">Tickets</button>
-<button onclick="showPage('booking')">Booking</button>
-<button onclick="showPage('cargo')">Cargo</button>
+<button onclick="page('dashboard')">Dashboard</button>
+<button onclick="page('fleet')">Fleet</button>
+<button onclick="page('routes')">Routes</button>
+<button onclick="page('trips')">Trips</button>
+<button onclick="page('mapPage')">Live Map</button>
+<button onclick="page('manifest')">Manifest</button>
+<button onclick="page('driver')">Driver</button>
+<button onclick="page('booking')">Booking</button>
 
 </div>
 
@@ -251,22 +230,9 @@ customer / customer123
 
 <div class="analytics">
 
-<div class="box">Routes<h2 id="routesCount"></h2></div>
-<div class="box">Trips<h2 id="tripsCount"></h2></div>
-<div class="box">Tickets<h2 id="ticketsCount"></h2></div>
-<div class="box">Revenue<h2>$<span id="revenue"></span></h2></div>
-
-</div>
-
-<div class="card">
-
-<h3>Seat Occupancy</h3>
-
-<div class="progress">
-<div id="seatBar" class="progress-bar"></div>
-</div>
-
-<p id="seatStats"></p>
+<div class="box">Routes <h2 id="routesCount"></h2></div>
+<div class="box">Trips <h2 id="tripsCount"></h2></div>
+<div class="box">Tickets <h2 id="ticketsCount"></h2></div>
 
 </div>
 
@@ -281,7 +247,7 @@ customer / customer123
 <h3>Add Bus</h3>
 
 <input id="busNumber" placeholder="Bus Number">
-<input id="driver" placeholder="Driver">
+<input id="driverName" placeholder="Driver">
 
 <button onclick="addBus()">Add</button>
 
@@ -308,18 +274,15 @@ customer / customer123
 
 <div class="card">
 
-<h3>Create Route</h3>
-
 <input id="from" placeholder="From">
 <input id="to" placeholder="To">
 <input id="price" placeholder="Price">
 
-<button onclick="addRoute()">Create</button>
+<button onclick="addRoute()">Create Route</button>
 
 </div>
 
 <table>
-
 <thead>
 <tr>
 <th>From</th>
@@ -327,9 +290,7 @@ customer / customer123
 <th>Price</th>
 </tr>
 </thead>
-
 <tbody id="routeList"></tbody>
-
 </table>
 
 </div>
@@ -340,13 +301,10 @@ customer / customer123
 
 <div class="card">
 
-<h3>Create Trip</h3>
-
 <select id="routeSelect"></select>
-<select id="busSelect"></select>
 <input id="time" placeholder="Departure Time">
 
-<button onclick="addTrip()">Create</button>
+<button onclick="addTrip()">Create Trip</button>
 
 </div>
 
@@ -355,7 +313,6 @@ customer / customer123
 <thead>
 <tr>
 <th>Route</th>
-<th>Bus</th>
 <th>Time</th>
 </tr>
 </thead>
@@ -366,89 +323,55 @@ customer / customer123
 
 </div>
 
-<!-- CALENDAR -->
+<!-- MAP -->
 
-<div id="calendar" style="display:none">
-
-<div class="card">
-
-<h3>Trip Calendar</h3>
-
-<input type="date" id="calendarDate">
-<button onclick="showTripsForDate()">Show Trips</button>
-
-<ul id="calendarTrips"></ul>
-
-</div>
-
-</div>
-
-<!-- LIVE MAP -->
-
-<div id="map" style="display:none">
+<div id="mapPage" style="display:none">
 
 <div class="card">
 
 <h3>Live Bus Tracking</h3>
 
-<iframe width="100%" height="450"
-src="https://maps.google.com/maps?q=kampala&t=&z=6&ie=UTF8&iwloc=&output=embed">
-</iframe>
+<div id="map"></div>
 
 </div>
 
 </div>
 
-<!-- ROUTE MAP -->
+<!-- MANIFEST -->
 
-<div id="routesMap" style="display:none">
+<div id="manifest" style="display:none">
 
-<div class="card">
-
-<h3>EcoBus Routes</h3>
-
-<iframe width="100%" height="450"
-src="https://maps.google.com/maps?q=juba%20kampala%20nakuru&output=embed">
-</iframe>
-
-</div>
-
-</div>
-
-<!-- SCANNER -->
-
-<div id="scanner" style="display:none">
-
-<div class="card">
-
-<h3>Boarding QR Scanner</h3>
-
-<video id="scannerVideo" width="100%" height="300" autoplay></video>
-
-<button onclick="startScanner()">Start Camera</button>
-
-</div>
-
-</div>
-
-<!-- TICKETS -->
-
-<div id="tickets" style="display:none">
+<h3>Passenger Manifest</h3>
 
 <table>
 
 <thead>
 <tr>
-<th>Passenger</th>
-<th>Route</th>
+<th>Name</th>
 <th>Seat</th>
-<th>Ticket</th>
 </tr>
 </thead>
 
-<tbody id="ticketList"></tbody>
+<tbody id="manifestList"></tbody>
 
 </table>
+
+</div>
+
+<!-- DRIVER DASHBOARD -->
+
+<div id="driver" style="display:none">
+
+<div class="card">
+
+<h3>Driver Mobile Dashboard</h3>
+
+<p>Trip Status: On Route</p>
+<p>Passengers: <span id="driverPassengers"></span></p>
+
+<button onclick="startTrip()">Start Trip</button>
+
+</div>
 
 </div>
 
@@ -456,15 +379,11 @@ src="https://maps.google.com/maps?q=juba%20kampala%20nakuru&output=embed">
 
 <div id="booking" style="display:none">
 
-<div class="mobile">
-
-<div class="mobile-header">Customer Booking</div>
-
-<div class="mobile-body">
+<h3>Seat Booking</h3>
 
 <select id="tripBooking"></select>
 
-<input id="passenger" placeholder="Passenger">
+<input id="passenger" placeholder="Passenger Name">
 
 <div id="seats" class="bus"></div>
 
@@ -474,158 +393,100 @@ src="https://maps.google.com/maps?q=juba%20kampala%20nakuru&output=embed">
 
 </div>
 
-<!-- CARGO -->
-
-<div id="cargo" style="display:none">
-
-<div class="card">
-
-<h3>Cargo Booking</h3>
-
-<input id="cargoName" placeholder="Sender Name">
-<input id="cargoItem" placeholder="Item">
-<input id="cargoDestination" placeholder="Destination">
-
-<button onclick="bookCargo()">Book Cargo</button>
-
-</div>
-
-<table>
-
-<thead>
-<tr>
-<th>Sender</th>
-<th>Item</th>
-<th>Destination</th>
-</tr>
-</thead>
-
-<tbody id="cargoList"></tbody>
-
-</table>
-
-</div>
-
-</div>
-</div>
-</div>
-
-<!-- TICKET MODAL -->
-
-<div id="ticketModal" class="modal">
-
-<div class="modal-content">
-
-<h3>Ticket QR</h3>
-
-<canvas id="ticketQR"></canvas>
-
-<button onclick="printTicket()">Print</button>
-<button onclick="closeModal()">Close</button>
-
-</div>
-
 </div>
 
 <script>
 
 const users=[
-{username:"admin",password:"admin123",role:"admin",name:"System Admin"},
-{username:"staff",password:"staff123",role:"staff",name:"Ticket Staff"},
-{username:"customer",password:"customer123",role:"customer",name:"Passenger"}
+{username:"admin",password:"admin123",role:"admin"},
+{username:"staff",password:"staff123",role:"staff"},
+{username:"driver",password:"driver123",role:"driver"},
+{username:"customer",password:"customer123",role:"customer"}
 ]
 
 function db(k){return JSON.parse(localStorage.getItem(k)||"[]")}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 
-function handleLogin(){
+function login(){
 
-let u=document.getElementById("username").value
-let p=document.getElementById("password").value
+let u=username.value
+let p=password.value
 
-let found=users.find(x=>x.username===u && x.password===p)
+let f=users.find(x=>x.username==u && x.password==p)
 
-if(!found){
-alert("Invalid login")
-return
-}
+if(!f)return alert("Invalid login")
 
 loginScreen.style.display="none"
 app.style.display="block"
 
-userInfo.innerText=found.name+" ("+found.role+")"
-
-initRole(found.role)
+userInfo.innerText=f.username
 
 render()
 
 }
 
-function initRole(role){
-
-let buttons=document.querySelectorAll(".sidebar button")
-
-buttons.forEach(b=>b.style.display="block")
-
-if(role==="customer"){
-
-buttons.forEach(b=>{
-if(!b.innerText.includes("Booking"))b.style.display="none"
-})
-
-showPage("booking")
-
+function logout(){
+location.reload()
 }
 
-else if(role==="staff"){
+function page(id){
 
-buttons.forEach(b=>{
-if(b.innerText.includes("Fleet"))b.style.display="none"
-})
-
-showPage("tickets")
-
-}
-
-else showPage("dashboard")
-
-}
-
-function showPage(id){
-
-document.querySelectorAll(".content > div")
-.forEach(p=>p.style.display="none")
+document.querySelectorAll(".content>div")
+.forEach(d=>d.style.display="none")
 
 document.getElementById(id).style.display="block"
 
 }
 
+/* DATA */
+
 function addBus(){
 
-let buses=db("buses")
-buses.push({number:busNumber.value,driver:driver.value})
-save("buses",buses)
+let b=db("buses")
+
+b.push({
+number:busNumber.value,
+driver:driverName.value
+})
+
+save("buses",b)
+
 render()
 
 }
 
 function addRoute(){
 
-let routes=db("routes")
-routes.push({from:from.value,to:to.value,price:price.value})
-save("routes",routes)
+let r=db("routes")
+
+r.push({
+from:from.value,
+to:to.value,
+price:price.value
+})
+
+save("routes",r)
+
 render()
 
 }
 
 function addTrip(){
 
-let trips=db("trips")
-trips.push({route:routeSelect.value,bus:busSelect.value,time:time.value})
-save("trips",trips)
+let t=db("trips")
+
+t.push({
+route:routeSelect.value,
+time:time.value
+})
+
+save("trips",t)
+
 render()
 
 }
+
+/* RENDER */
 
 function render(){
 
@@ -633,17 +494,13 @@ let buses=db("buses")
 let routes=db("routes")
 let trips=db("trips")
 let tickets=db("tickets")
-let cargo=db("cargo")
 
 routesCount.innerText=routes.length
 tripsCount.innerText=trips.length
 ticketsCount.innerText=tickets.length
 
-let rev=0
-tickets.forEach(t=>rev+=Number(routes[t.route]?.price||0))
-revenue.innerText=rev
-
 busList.innerHTML=""
+
 buses.forEach(b=>{
 busList.innerHTML+=`<tr><td>${b.number}</td><td>${b.driver}</td></tr>`
 })
@@ -653,14 +510,20 @@ routeSelect.innerHTML=""
 
 routes.forEach((r,i)=>{
 
-routeList.innerHTML+=`<tr><td>${r.from}</td><td>${r.to}</td><td>$${r.price}</td></tr>`
-routeSelect.innerHTML+=`<option value="${i}">${r.from} → ${r.to}</option>`
+routeList.innerHTML+=`
+<tr>
+<td>${r.from}</td>
+<td>${r.to}</td>
+<td>${r.price}</td>
+</tr>
+`
 
-})
+routeSelect.innerHTML+=`
+<option value="${i}">
+${r.from} → ${r.to}
+</option>
+`
 
-busSelect.innerHTML=""
-buses.forEach((b,i)=>{
-busSelect.innerHTML+=`<option value="${i}">${b.number}</option>`
 })
 
 tripList.innerHTML=""
@@ -668,67 +531,52 @@ tripBooking.innerHTML=""
 
 trips.forEach((t,i)=>{
 
-let r=routes[t.route]||{}
-let b=buses[t.bus]||{}
+let r=routes[t.route]
 
-tripList.innerHTML+=`<tr>
-<td>${r.from}→${r.to}</td>
-<td>${b.number}</td>
-<td>${t.time}</td>
-</tr>`
-
-tripBooking.innerHTML+=`<option value="${i}">
-${r.from}→${r.to} ${t.time}
-</option>`
-
-})
-
-ticketList.innerHTML=""
-
-tickets.forEach(t=>{
-
-let r=routes[t.route]||{}
-
-ticketList.innerHTML+=`
+tripList.innerHTML+=`
 <tr>
-<td>${t.name}</td>
 <td>${r.from}→${r.to}</td>
-<td>${t.seat}</td>
-<td><button onclick="viewTicket('${t.id}')">View</button></td>
+<td>${t.time}</td>
 </tr>
+`
+
+tripBooking.innerHTML+=`
+<option value="${i}">
+${r.from}→${r.to} ${t.time}
+</option>
 `
 
 })
 
-cargoList.innerHTML=""
-
-cargo.forEach(c=>{
-cargoList.innerHTML+=`
-<tr>
-<td>${c.name}</td>
-<td>${c.item}</td>
-<td>${c.dest}</td>
-</tr>`
-})
-
-updateSeats()
-updateSeatStats()
+drawSeats()
 
 }
 
-function updateSeats(){
+/* BUS SEATS */
+
+function drawSeats(){
 
 let trip=tripBooking.value
-let seatsDiv=document.getElementById("seats")
+
+let seats=document.getElementById("seats")
+
 let tickets=db("tickets")
 
-seatsDiv.innerHTML=""
+seats.innerHTML=""
 
 for(let i=1;i<=52;i++){
 
+if(i%5==3){
+
+seats.innerHTML+=`<div class="aisle"></div>`
+
+continue
+
+}
+
 let booked=tickets.find(t=>t.trip==trip && t.seat==i)
 
-seatsDiv.innerHTML+=`
+seats.innerHTML+=`
 <div class="seat ${booked?"booked":"free"}"
 onclick="bookSeat(${i})">${i}</div>
 `
@@ -742,100 +590,41 @@ function bookSeat(n){
 let name=passenger.value
 let trip=tripBooking.value
 
-if(!name)return alert("Enter passenger name")
-
 let tickets=db("tickets")
-let trips=db("trips")
 
 tickets.push({
-id:"ECO"+Date.now(),
 name:name,
 trip:trip,
-route:trips[trip].route,
-seat:n
+seat:n,
+id:"ECO"+Date.now()
 })
 
 save("tickets",tickets)
 
-render()
-
-}
-
-function viewTicket(id){
-
-QRCode.toCanvas(ticketQR,id)
-ticketModal.style.display="flex"
-
-}
-
-function printTicket(){
-window.print()
-}
-
-function closeModal(){
-ticketModal.style.display="none"
-}
-
-function bookCargo(){
-
-let cargo=db("cargo")
-
-cargo.push({
-name:cargoName.value,
-item:cargoItem.value,
-dest:cargoDestination.value
-})
-
-save("cargo",cargo)
+generateQR("ECO"+Date.now())
 
 render()
 
 }
 
-function updateSeatStats(){
+/* MAP */
 
-let tickets=db("tickets").length
-let total=52
+let map=L.map('map').setView([1.29,32.29],6)
 
-let percent=(tickets/total)*100
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map)
 
-seatBar.style.width=percent+"%"
-seatStats.innerText=tickets+" / "+total+" seats booked"
+let bus=L.marker([0.3476,32.5825]).addTo(map)
 
-}
+setInterval(()=>{
 
-function showTripsForDate(){
+let lat=bus.getLatLng().lat+0.05*(Math.random()-0.5)
+let lng=bus.getLatLng().lng+0.05*(Math.random()-0.5)
 
-let trips=db("trips")
-let routes=db("routes")
+bus.setLatLng([lat,lng])
 
-calendarTrips.innerHTML=""
-
-trips.forEach(t=>{
-
-let r=routes[t.route]||{}
-
-calendarTrips.innerHTML+=`
-<li>${calendarDate.value} : ${r.from} → ${r.to} (${t.time})</li>
-`
-
-})
-
-}
-
-function startScanner(){
-
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream=>{
-scannerVideo.srcObject=stream
-})
-.catch(()=>{
-alert("Camera not available")
-})
-
-}
-
-tripBooking.addEventListener("change",updateSeats)
+},3000)
 
 render()
 
