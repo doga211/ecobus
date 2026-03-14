@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ECOBUS V10 – Investor Demo</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ECOBUS V12 – Interactive Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="data:application/json,{
-'name':'ECOBUS V10',
+'name':'ECOBUS V12',
 'short_name':'ECOBUS',
 'display':'standalone',
 'start_url':'./',
@@ -24,17 +24,19 @@
 --seat-free:#2ecc71;
 --seat-booked:#e74c3c;
 --seat-selected:#2196f3;
+--seat-size:35px;
+--bus-width:200px;
 }
 body{margin:0;font-family:Arial;background:var(--eco-bg);}
 header{background:linear-gradient(90deg,var(--eco-blue),var(--eco-light));color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;font-weight:bold;}
-.sidebar{width:220px;background:#16202a;height:100vh;position:fixed;padding-top:20px;}
+.sidebar{width:220px;background:#16202a;height:100vh;position:fixed;padding-top:20px;overflow:auto;}
 .sidebar button{display:block;width:100%;border:none;padding:12px;background:none;color:white;text-align:left;cursor:pointer;}
 .sidebar button:hover{background:var(--eco-light);}
 .main{margin-left:220px;padding:20px;}
 .card{background:white;padding:20px;margin:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
 button{background:var(--eco-blue);border:none;padding:8px 12px;border-radius:5px;color:white;cursor:pointer;}
-.bus{display:grid;grid-template-columns:repeat(4,40px);gap:6px;}
-.seat{width:40px;height:40px;text-align:center;line-height:40px;border-radius:5px;cursor:pointer;background:#ccc;}
+.bus{display:grid;grid-template-columns:repeat(4,var(--seat-size));gap:6px;margin-bottom:15px;width:var(--bus-width);}
+.seat{width:var(--seat-size);height:var(--seat-size);text-align:center;line-height:var(--seat-size);border-radius:4px;cursor:pointer;background:#ccc;}
 .seat.booked{background:var(--seat-booked);color:white;}
 .seat.selected{background:var(--seat-selected);color:white;}
 .map{height:400px;position:relative;}
@@ -44,22 +46,19 @@ video{width:100%;border:1px solid #ccc;}
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login" class="card" style="max-width:350px;margin:80px auto">
 <h2>ECOBUS Login</h2>
 <input id="user" placeholder="username"><br><br>
 <input id="pass" type="password" placeholder="password"><br><br>
 <button onclick="login()">Login</button>
-<p>
-admin / admin123<br>
-staff / staff123<br>
-customer / customer123<br>
-driver / driver123
-</p>
+<p>admin/admin123 | staff/staff123 | passenger/passenger123 | driver/driver123</p>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none">
 <header>
-<div>🚍 ECOBUS V10 Demo</div>
+<div>🚍 ECOBUS V12 Demo</div>
 <div id="userInfo"></div>
 <button onclick="logout()" style="background:#d32f2f;">Logout</button>
 </header>
@@ -75,24 +74,28 @@ driver / driver123
 
 <div class="main">
 
+<!-- DASHBOARD -->
 <div id="dashboard" class="card">
 <h3>Analytics</h3>
 <canvas id="chart"></canvas>
 </div>
 
+<!-- LIVE MAP -->
 <div id="map" class="card" style="display:none">
 <h3>Live Bus Map</h3>
 <div id="mapArea" style="height:500px;"></div>
 </div>
 
+<!-- BOOKING -->
 <div id="booking" class="card" style="display:none">
-<h3>Seat Booking</h3>
+<h3>Seat Booking (2+2 Layout)</h3>
 <select id="tripSelect"></select><br><br>
 <div class="bus" id="bus"></div>
 Passenger Name: <input id="pname">
 <button onclick="book()">Book & Download Ticket</button>
 </div>
 
+<!-- QR BOARDING -->
 <div id="qr" class="card" style="display:none">
 <h3>QR Boarding</h3>
 <input id="scanSeat" placeholder="Enter Seat / Trip"><br><br>
@@ -100,13 +103,15 @@ Passenger Name: <input id="pname">
 <p id="scanResult"></p>
 </div>
 
+<!-- PASSENGER MANIFEST -->
 <div id="manifest" class="card" style="display:none">
 <h3>Passenger Manifest</h3>
 <ul id="manifestList"></ul>
 </div>
 
+<!-- DRIVER DASHBOARD -->
 <div id="driver" class="card" style="display:none">
-<h3>Driver Dashboard (Mobile)</h3>
+<h3>Driver Dashboard</h3>
 <ul id="driverList"></ul>
 </div>
 
@@ -115,7 +120,15 @@ Passenger Name: <input id="pname">
 
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY"></script>
 <script>
-// ===== GLOBAL =====
+// ===== USERS & ROLES =====
+const users=[
+{username:"admin",password:"admin123",role:"admin",name:"Admin"},
+{username:"staff",password:"staff123",role:"staff",name:"Staff"},
+{username:"passenger",password:"passenger123",role:"passenger",name:"Passenger"},
+{username:"driver",password:"driver123",role:"driver",name:"Driver"}
+];
+
+// ===== TRIPS & SEATS =====
 const tripsData=[
 {name:"Juba-Kampala",coords:[{lat:4.85,lng:31.60},{lat:0.3476,lng:32.5825}]},
 {name:"Kampala-Nakuru",coords:[{lat:0.3476,lng:32.5825},{lat:-1.2921,lng:36.8219}]},
@@ -127,28 +140,55 @@ let selectedSeat=null,busMarkers=[];
 // ===== LOGIN =====
 function login(){
 const u=user.value,p=pass.value;
-const found=[
-{username:"admin",password:"admin123",role:"admin",name:"Admin"},
-{username:"staff",password:"staff123",role:"staff",name:"Staff"},
-{username:"customer",password:"customer123",role:"passenger",name:"Passenger"},
-{username:"driver",password:"driver123",role:"driver",name:"Driver"}
-].find(x=>x.username==u && x.password==p);
+const found=users.find(x=>x.username==u && x.password==p);
 if(!found){alert("Invalid login");return;}
 login.style.display="none";app.style.display="block";
 userInfo.innerText=found.name+" ("+found.role+")";
+applyRole(found.role);
 populateTrips();updateChart();loadDriverDashboard();
 }
 
-// ===== NAVIGATION =====
+// ===== LOGOUT =====
 function logout(){app.style.display="none";login.style.display="block";userInfo.innerText="";}
+
+// ===== ROLE-BASED ACCESS =====
+function applyRole(role){
+const buttons=document.querySelectorAll(".sidebar button");
+buttons.forEach(b=>b.style.display="block");
+if(role==="passenger"){buttons.forEach(b=>{if(!b.innerText.includes("Booking"))b.style.display="none";});page("booking");}
+if(role==="driver"){buttons.forEach(b=>{if(!b.innerText.includes("Driver"))b.style.display="none";});page("driver");}
+if(role==="staff"){buttons.forEach(b=>{if(!b.innerText.includes("Booking") && !b.innerText.includes("Manifest") && !b.innerText.includes("Driver"))b.style.display="none";});page("manifest");}
+if(role==="admin")page("dashboard");
+}
+
+// ===== NAVIGATION =====
 function page(p){["dashboard","map","booking","qr","manifest","driver"].forEach(x=>document.getElementById(x).style.display="none");document.getElementById(p).style.display="block");if(p=="manifest")loadManifest();if(p=="booking")initSeats();if(p=="map")startMap();if(p=="driver")loadDriverDashboard();}
 
-// ===== TRIPS & SEATS =====
+// ===== TRIPS =====
 function populateTrips(){let sel=tripSelect;sel.innerHTML="";tripsData.forEach((t,i)=>sel.innerHTML+=`<option value="${i}">${t.name}</option>`);}
-function initSeats(){let busDiv=bus;busDiv.innerHTML="";let trip=tripsData[tripSelect.value].name;for(let i=1;i<=52;i++){let s=document.createElement("div");s.className="seat";s.innerText=i;if(seatsData[trip].includes(i))s.classList.add("booked");s.onclick=()=>selectSeat(i,s,trip);busDiv.appendChild(s);}}
+
+// ===== SEATS =====
+function initSeats(){
+let busDiv=bus;busDiv.innerHTML="";
+let trip=tripsData[tripSelect.value].name;
+for(let i=1;i<=52;i++){
+let s=document.createElement("div");s.className="seat";s.innerText=i;
+if(seatsData[trip].includes(i))s.classList.add("booked");
+s.onclick=()=>selectSeat(i,s,trip);busDiv.appendChild(s);
+}}
 function selectSeat(i,el,trip){if(seatsData[trip].includes(i))return;selectedSeat=i;document.querySelectorAll(".seat").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");}
-function book(){let trip=tripsData[tripSelect.value].name;if(!selectedSeat){alert("Select seat");return;}seatsData[trip].push(selectedSeat);createTicket(selectedSeat,trip);initSeats();updateChart();loadDriverDashboard();}
-function createTicket(seat,trip){let canvas=document.createElement("canvas");QRCode.toCanvas(canvas,`ECOBUS-${trip}-Seat${seat}`);let img=canvas.toDataURL();const {jsPDF}=window.jspdf;let pdf=new jsPDF();pdf.text("ECOBUS Ticket",20,20);pdf.text(`Trip: ${trip}`,20,40);pdf.text(`Seat: ${seat}`,20,50);pdf.addImage(img,'PNG',20,60,50,50);pdf.save(`ticket-${trip}-Seat${seat}.pdf`);alert("Ticket downloaded!");}
+function book(){
+let trip=tripsData[tripSelect.value].name;if(!selectedSeat){alert("Select seat");return;}
+seatsData[trip].push(selectedSeat);
+createTicket(selectedSeat,trip);
+initSeats();updateChart();loadDriverDashboard();
+}
+function createTicket(seat,trip){
+let canvas=document.createElement("canvas");QRCode.toCanvas(canvas,`ECOBUS-${trip}-Seat${seat}`);
+let img=canvas.toDataURL();const {jsPDF}=window.jspdf;let pdf=new jsPDF();pdf.text("ECOBUS Ticket",20,20);pdf.text(`Trip: ${trip}`,20,40);pdf.text(`Seat: ${seat}`,20,50);pdf.addImage(img,'PNG',20,60,50,50);pdf.save(`ticket-${trip}-Seat${seat}.pdf`);alert("Ticket downloaded!");
+}
+
+// ===== MANIFEST =====
 function loadManifest(){manifestList.innerHTML="";let trip=tripsData[tripSelect.value].name;seatsData[trip].forEach(s=>{let li=document.createElement("li");li.innerText=`Passenger Seat ${s} (${trip})`;manifestList.appendChild(li);});}
 
 // ===== DRIVER DASHBOARD =====
@@ -161,8 +201,10 @@ function scanQR(){let v=scanSeat.value;let found=false;tripsData.forEach(t=>{if(
 function updateChart(){new Chart(chart,{type:'bar',data:{labels:tripsData.map(t=>t.name),datasets:[{label:"Seats Sold",data:tripsData.map(t=>seatsData[t.name].length),backgroundColor:'#0A4FB4'}]}});}
 
 // ===== LIVE MAP =====
-function startMap(){let map=new google.maps.Map(document.getElementById("mapArea"),{zoom:6,center:tripsData[0].coords[0]});busMarkers=[];tripsData.forEach((t,index)=>{let poly=new google.maps.Polyline({path:t.coords,geodesic:true,strokeColor:"#FF0000",strokeOpacity:0.8,strokeWeight:4});poly.setMap(map);let marker=new google.maps.Marker({position:t.coords[0],map:map,title:`Bus ${t.name}`,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:"blue",fillOpacity:1,strokeWeight:1,strokeColor:"white"}});busMarkers.push({marker,path:t.coords,progress:0,speed:0.001*(index+1)});});animateBuses();}
+function startMap(){let map=new google.maps.Map(document.getElementById("mapArea"),{zoom:6,center:tripsData[0].coords[0]});busMarkers=[];tripsData.forEach((t,index)=>{for(let b=0;b<2;b++){let marker=new google.maps.Marker({position:t.coords[0],map:map,title:`Bus ${t.name} #${b+1}`,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:"blue",fillOpacity:1,strokeWeight:1,strokeColor:"white"}});busMarkers.push({marker,path:t.coords,progress:0,speed:0.001*(index+1+b)});}});animateBuses();}
 function animateBuses(){busMarkers.forEach(b=>{(function move(){let path=b.path;let i=Math.floor(b.progress*(path.length-1));let next=Math.min(i+1,path.length-1);let from=path[i],to=path[next];let lat=from.lat+(to.lat-from.lat)*(b.progress-i);let lng=from.lng+(to.lng-from.lng)*(b.progress-i);b.marker.setPosition({lat,lng});b.progress+=b.speed;if(b.progress<path.length-1)setTimeout(move,50);else b.progress=0;setTimeout(move,50)})()});}
+
+tripSelect.addEventListener("change",initSeats);
 </script>
 </body>
 </html>
